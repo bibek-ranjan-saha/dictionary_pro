@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#EEFFEEEE"
+    android:padding="20dp"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:id="@+id/lnr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal"
+        android:weightSum="10">
+
+        <soup.neumorphism.NeumorphCardView
+            style="@style/Widget.Neumorph.CardView"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_marginTop="10dp"
+            android:layout_weight="1.5"
+            app:neumorph_shapeType="flat">
+
+            <EditText
+                android:id="@+id/wordtxt"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:background="@android:color/transparent"
+                android:hint="word"
+                android:singleLine="true"
+                android:textCursorDrawable="@drawable/cursor"
+                android:textSize="30sp" />
+        </soup.neumorphism.NeumorphCardView>
+
+        <soup.neumorphism.NeumorphImageView
+            android:id="@+id/cutbtn"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="10dp"
+            android:layout_weight="4.25"
+            android:hapticFeedbackEnabled="true"
+            android:padding="10dp"
+            android:src="@drawable/backspace" />
+
+        <soup.neumorphism.NeumorphImageView
+            android:id="@+id/micbtn"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="10dp"
+            android:layout_weight="4.25"
+            android:hapticFeedbackEnabled="true"
+            android:padding="10dp"
+            android:src="@drawable/mic" />
+    </LinearLayout>
+
+    <soup.neumorphism.NeumorphButton
+        android:id="@+id/srchbtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lnr"
+        android:layout_marginTop="20dp"
+        android:onClick="requestApiButtonClick"
+        android:padding="20dp"
+        android:text="search"
+        android:textColor="@color/white"
+        android:textColorLink="@color/black"
+        android:textSize="30sp"
+        app:neumorph_shapeType="basin"></soup.neumorphism.NeumorphButton>
+
+    <ProgressBar
+        android:id="@+id/prgbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/srchbtn"
+        android:layout_margin="20dp"
+        android:layout_marginLeft="30dp"
+        android:layout_toRightOf="@id/srchbtn"
+        android:visibility="invisible" />
+
+    <soup.neumorphism.NeumorphTextView
+        android:id="@+id/txtans"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/srchbtn"
+        android:layout_marginTop="30dp"
+        android:text="answer will be shown here"
+        android:textSize="25sp" />
+
+    <soup.neumorphism.NeumorphImageView
+        android:id="@+id/spkbtn"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_below="@+id/txtans"
+        android:layout_alignParentRight="true"
+        android:hapticFeedbackEnabled="true"
+        android:padding="18dp"
+        android:src="@drawable/volup"
+        app:neumorph_shapeType="flat" />
+
+    <LinearLayout
+        android:id="@+id/banner_container"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical">
+        <soup.neumorphism.NeumorphTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text="made with ❤ by Bibek ranjan saha"
+            android:textSize="30sp"/>
+    </LinearLayout>
+</RelativeLayout>
