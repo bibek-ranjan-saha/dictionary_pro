@@ -185,13 +185,10 @@ protected String doInBackground(String... params) {
 
                 def = d.getString(0);
                 activity.t2.setText(def);
-//                Toast.makeText(activity, def, Toast.LENGTH_LONG).show();
 
             } catch (JSONException e) {
                 e.printStackTrace();
                 activity.t2.setText("sorry try any thing else");
-//                Toast.makeText(activity,"sorry try any thing else", Toast.LENGTH_LONG).show();
             }
-//            Log.v("dictionary","json response comming up"+result);
         }
     }

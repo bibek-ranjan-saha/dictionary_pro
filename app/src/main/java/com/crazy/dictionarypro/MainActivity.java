@@ -1,16 +1,27 @@
 package com.crazy.dictionarypro;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,9 +29,6 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.facebook.ads.*;
-import com.facebook.ads.AudienceNetworkAds;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -36,33 +44,18 @@ public class MainActivity extends AppCompatActivity {
     public TextView t2;
     private TextToSpeech textToSpeech;
     ProgressBar pr;
-    private AdView adView;
     String wordr;
+    private SpeechRecognizer speechRecognizer;
+    public static final Integer RequestAudioRequestCode = 1;
+    AlertDialog.Builder alertspeechd;
+    AlertDialog alertDialog;
+//    private int percentage;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
-
-
-//        AudienceNetworkAds.initialize(this);
-//        // Instantiate an AdView object.
-//        // NOTE: The placement ID from the Facebook Monetization Manager identifies your App.
-//        // To get test ads, add IMG_16_9_APP_INSTALL# to your placement id. Remove this when your app is ready to serve real ads.
-//
-//        adView = new AdView(this, "IMG_16_9_APP_INSTALL#YOUR_PLACEMENT_ID", AdSize.BANNER_HEIGHT_50);
-//
-//        // Find the Ad Container
-//        LinearLayout adContainer = (LinearLayout) findViewById(R.id.banner_container);
-//
-//        // Add the ad view to your activity layout
-//        adContainer.addView(adView);
-//
-//        // Request an ad
-//        adView.loadAd();
-
 
         t1 = findViewById(R.id.wordtxt);
         t2 = findViewById(R.id.txtans);
@@ -72,27 +65,111 @@ public class MainActivity extends AppCompatActivity {
         pr = findViewById(R.id.prgbar);
         cut = findViewById(R.id.cutbtn);
 
-        TextWatcher textWatcher = new TextWatcher() {
+        b1.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            public void onClick(View v) {
+                requestApiButtonClick();
+            }
+        });
+
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO)!= PackageManager.PERMISSION_GRANTED)
+        {
+            checkPermissionn();
+        }
+
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
+
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+//                intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "speak the word to get meaning");
+//                try {
+//                    startActivityForResult(intent, 1);
+//                } catch (ActivityNotFoundException e) {
+//                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+//                }
+        speechRecognizer.setRecognitionListener(new RecognitionListener() {
+            @Override
+            public void onReadyForSpeech(Bundle params) {
 
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-                if (!t1.getText().toString().equals("") && !t1.getText().toString().contains(" ")) {
-                        wordr = t1.getText().toString();
-                }
+            public void onBeginningOfSpeech() {
+                ViewGroup viewGroup = findViewById(android.R.id.content);
+                View dialogView = LayoutInflater.from(MainActivity.this).inflate(R.layout.speechlayout,viewGroup,false);
+                alertspeechd = new AlertDialog.Builder(MainActivity.this);
+                alertspeechd.setMessage("Listening....");
+                alertspeechd.setView(dialogView);
+                alertDialog = alertspeechd.create();
+                alertDialog.show();
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-                requestApiButtonClick(b1);
+            public void onRmsChanged(float rmsdB) {
 
             }
-        };
-        t1.addTextChangedListener(textWatcher);
+
+            @Override
+            public void onBufferReceived(byte[] buffer) {
+
+            }
+
+            @Override
+            public void onEndOfSpeech() {
+
+            }
+
+            @Override
+            public void onError(int error) {
+
+            }
+
+            @Override
+            public void onResults(Bundle results) {
+                mic.setImageResource(R.drawable.mic);
+                ArrayList<String> arrayList = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+//                ArrayList<String> confidence = results.getStringArrayList(SpeechRecognizer.CONFIDENCE_SCORES);
+                t1.setText(arrayList.get(0));
+//                percentage = Integer.parseInt(confidence.get(0));
+//                Toast.makeText(MainActivity.this, "confidence level : "+percentage+"%", LENGTH_SHORT).show();
+                alertDialog.dismiss();
+                requestApiButtonClick();
+            }
+
+            @Override
+            public void onPartialResults(Bundle partialResults) {
+
+            }
+
+            @Override
+            public void onEvent(int eventType, Bundle params) {
+
+            }
+        });
+
+
+//        TextWatcher textWatcher = new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//
+//                if (!t1.getText().toString().equals("") && t1.getText().toString().contains(" ")) {
+//                        wordr = t1.getText().toString();
+//                }
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//                requestApiButtonClick(b1);
+//
+//            }
+//        };
+//        t1.addTextChangedListener(textWatcher);
 
         cut.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -125,28 +202,37 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-                intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "speak the word to get meaning");
-                try {
-                    startActivityForResult(intent, 1);
-                } catch (ActivityNotFoundException e) {
-                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
+        mic.setOnTouchListener((v, event) -> {
+            if (event.getAction() == event.ACTION_UP)
+            {
+                speechRecognizer.stopListening();
             }
+
+            if (event.getAction() == event.ACTION_DOWN)
+            {
+                mic.setImageResource(R.drawable.mic);
+                speechRecognizer.startListening(intent);
+            }
+            return false;
         });
     }
 
+    private void checkPermissionn() {
+        ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.RECORD_AUDIO},RequestAudioRequestCode);
+    }
 
-        public void requestApiButtonClick(View view) {
-            MyDictionaryRequest r = new MyDictionaryRequest(MainActivity.this);
-            url = dictionaryEntries();
-            r.execute(url);
 
+    public void requestApiButtonClick() {
+            if (!t1.getText().toString().isEmpty())
+            {
+                wordr = t1.getText().toString();
+                MyDictionaryRequest r = new MyDictionaryRequest(MainActivity.this);
+                url = dictionaryEntries();
+                r.execute(url);
+            }
+            else {
+                Toast.makeText(this, "write something", LENGTH_SHORT).show();
+            }
         }
 
         private String dictionaryEntries() {
@@ -166,9 +252,29 @@ public class MainActivity extends AppCompatActivity {
                     if (resultCode == RESULT_OK && null != data) {
                         ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                         t1.setText(t1.getText() + result.get(0));
-                        requestApiButtonClick(b1);
+                        requestApiButtonClick();
                     }
                     break;
             }
         }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        speechRecognizer.destroy();
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == RequestAudioRequestCode && grantResults.length>0)
+        {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            {
+                Toast.makeText(this, "mic permission granted", LENGTH_SHORT).show();
+            }
+        }
+
+    }
+}
