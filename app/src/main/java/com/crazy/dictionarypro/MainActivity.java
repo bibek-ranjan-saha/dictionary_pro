@@ -1,23 +1,16 @@
 package com.crazy.dictionarypro;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
-import android.content.ActivityNotFoundException;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.transition.TransitionManager;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -25,10 +18,18 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -45,17 +46,23 @@ public class MainActivity extends AppCompatActivity {
     private TextToSpeech textToSpeech;
     ProgressBar pr;
     String wordr;
+    ConstraintLayout bg;
+    String messgae;
     private SpeechRecognizer speechRecognizer;
     public static final Integer RequestAudioRequestCode = 1;
     AlertDialog.Builder alertspeechd;
     AlertDialog alertDialog;
 //    private int percentage;
 
-
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        bg = findViewById(R.id.bg);
+
+        TransitionManager.beginDelayedTransition(bg);
 
         t1 = findViewById(R.id.wordtxt);
         t2 = findViewById(R.id.txtans);
@@ -65,12 +72,17 @@ public class MainActivity extends AppCompatActivity {
         pr = findViewById(R.id.prgbar);
         cut = findViewById(R.id.cutbtn);
 
-        b1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestApiButtonClick();
-            }
-        });
+        messgae = t1.getText().toString();
+
+        if (savedInstanceState != null)
+        {
+            messgae = savedInstanceState.getString("msg");
+            wordr = savedInstanceState.getString("word");
+            t1.setText(wordr);
+            t2.setText(messgae);
+        }
+
+        b1.setOnClickListener(v -> requestApiButtonClick());
 
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO)!= PackageManager.PERMISSION_GRANTED)
         {
@@ -130,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
                 mic.setImageResource(R.drawable.mic);
                 ArrayList<String> arrayList = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 //                ArrayList<String> confidence = results.getStringArrayList(SpeechRecognizer.CONFIDENCE_SCORES);
+                messgae = t1.getText().toString();
                 t1.setText(arrayList.get(0));
 //                percentage = Integer.parseInt(confidence.get(0));
 //                Toast.makeText(MainActivity.this, "confidence level : "+percentage+"%", LENGTH_SHORT).show();
@@ -171,44 +184,31 @@ public class MainActivity extends AppCompatActivity {
 //        };
 //        t1.addTextChangedListener(textWatcher);
 
-        cut.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!t1.getText().toString().equals(""))
-                {
-                    t1.setText("");
-                }
-                else
-                {
-                    Snackbar.make(v,"nothing to clear",Snackbar.LENGTH_SHORT).show();
-                }
+        cut.setOnClickListener(v -> {
+            if (!t1.getText().toString().equals(""))
+            {
+                t1.setText("");
+            }
+            else
+            {
+                Snackbar.make(v,"nothing to clear",Snackbar.LENGTH_SHORT).show();
             }
         });
 
 
-        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status != TextToSpeech.ERROR) {
-                    textToSpeech.setLanguage(Locale.ENGLISH);
-                }
-            }
+        textToSpeech = new TextToSpeech(getApplicationContext(), status -> {
+            if (status != TextToSpeech.ERROR) textToSpeech.setLanguage(Locale.ENGLISH);
         });
 
-        spk.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                textToSpeech.speak(t2.getText().toString(), TextToSpeech.QUEUE_FLUSH, null);
-            }
-        });
+        spk.setOnClickListener(v -> textToSpeech.speak(t2.getText().toString(), TextToSpeech.QUEUE_FLUSH, null));
 
         mic.setOnTouchListener((v, event) -> {
-            if (event.getAction() == event.ACTION_UP)
+            if (event.getAction() == MotionEvent.ACTION_UP)
             {
                 speechRecognizer.stopListening();
             }
 
-            if (event.getAction() == event.ACTION_DOWN)
+            if (event.getAction() == MotionEvent.ACTION_DOWN)
             {
                 mic.setImageResource(R.drawable.mic);
                 speechRecognizer.startListening(intent);
@@ -244,17 +244,16 @@ public class MainActivity extends AppCompatActivity {
             return "https://od-api.oxforddictionaries.com:443/api/v2/entries/" + language + "/" + word_id + "?" + "fields=" + fields + "&strictMatch=" + strictMatch;
         }
 
+        @SuppressLint("SetTextI18n")
         @Override
         protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
             super.onActivityResult(requestCode, resultCode, data);
-            switch (requestCode) {
-                case 1:
-                    if (resultCode == RESULT_OK && null != data) {
-                        ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                        t1.setText(t1.getText() + result.get(0));
-                        requestApiButtonClick();
-                    }
-                    break;
+            if (requestCode == 1) {
+                if (resultCode == RESULT_OK && null != data) {
+                    ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                    t1.setText(t1.getText() + result.get(0));
+                    requestApiButtonClick();
+                }
             }
         }
 
@@ -276,5 +275,22 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        outState.putString("msg",messgae);
+        outState.putString("word",wordr);
+    }
+
+    @Override
+    public void onBackPressed() {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setMessage("you are about to leave me")
+                .setTitle("dictionary app")
+                .setNegativeButton("no", (dialog, which) -> Toast.makeText(getApplicationContext(),"lets continue", LENGTH_SHORT).show())
+                .setPositiveButton("yes", (dialog, which) -> finishAffinity())
+                .show();
     }
 }
